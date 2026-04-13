@@ -1,0 +1,2167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VitalWatch - Early Health Warning System</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Source+Sans+3:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #F9F8F4;
+            --card-bg: #FFFFFF;
+            --foreground: #2D3A31;
+            --primary: #8C9A84;
+            --primary-hover: #7A8972;
+            --secondary: #DCCFC2;
+            --border: #E6E2DA;
+            --accent: #C27B66;
+            --success: #8C9A84;
+            --warning: #D4A373;
+            --alert: #C27B66;
+            --text: #2D3A31;
+            --text-secondary: #6B7C6E;
+            --shadow-sm: 0 4px 6px -1px rgba(45, 58, 49, 0.05);
+            --shadow-md: 0 10px 15px -3px rgba(45, 58, 49, 0.05);
+            --shadow-lg: 0 20px 40px -10px rgba(45, 58, 49, 0.08);
+            --shadow-xl: 0 25px 50px -12px rgba(45, 58, 49, 0.15);
+            --radius-sm: 12px;
+            --radius-md: 24px;
+            --radius-full: 9999px;
+            --transition-fast: 0.3s ease-out;
+            --transition-normal: 0.5s ease-out;
+            --transition-slow: 0.7s ease-out;
+        }
+
+        [data-theme="dark"] {
+            --bg: #1A211C;
+            --card-bg: #232D26;
+            --foreground: #E8E4DE;
+            --primary: #9AAF91;
+            --primary-hover: #A8BD9C;
+            --secondary: #3A453B;
+            --border: #3D4A3F;
+            --accent: #D4886E;
+            --text: #E8E4DE;
+            --text-secondary: #A3B5A2;
+            --shadow-sm: 0 4px 6px -1px rgba(0, 0, 0, 0.2);
+            --shadow-md: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+            --shadow-lg: 0 20px 40px -10px rgba(0, 0, 0, 0.4);
+            --shadow-xl: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Source Sans 3', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.7;
+            min-height: 100vh;
+            transition: background var(--transition-normal), color var(--transition-normal);
+        }
+
+        .grain-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 9999;
+            opacity: 0.018;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+            transition: opacity var(--transition-normal);
+        }
+
+        h1, h2, h3, h4, h5, h6 {
+            font-family: 'Playfair Display', serif;
+            font-weight: 600;
+            line-height: 1.2;
+        }
+
+        .container {
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 0 24px;
+        }
+
+        /* Header */
+        header {
+            background: var(--bg);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border);
+            padding: 20px 0;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+            transition: all var(--transition-normal);
+        }
+
+        header.scrolled {
+            background: rgba(249, 248, 244, 0.9);
+            box-shadow: var(--shadow-sm);
+        }
+
+        [data-theme="dark"] header.scrolled {
+            background: rgba(26, 33, 28, 0.9);
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-family: 'Playfair Display', serif;
+            font-weight: 600;
+            font-size: 1.5rem;
+            color: var(--text);
+            text-decoration: none;
+        }
+
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+            background: var(--primary);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform var(--transition-normal);
+        }
+
+        .logo-icon:hover {
+            transform: scale(1.05);
+        }
+
+        .logo-icon svg {
+            width: 22px;
+            height: 22px;
+            color: white;
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .theme-toggle {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            border: 1px solid var(--border);
+            background: var(--card-bg);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all var(--transition-fast);
+            color: var(--text);
+        }
+
+        .theme-toggle:hover {
+            background: var(--secondary);
+            transform: scale(1.05);
+        }
+
+        .theme-toggle svg {
+            width: 22px;
+            height: 22px;
+        }
+
+        .privacy-badge {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.9rem;
+            color: var(--primary);
+            background: var(--secondary);
+            padding: 10px 18px;
+            border-radius: var(--radius-full);
+        }
+
+        .privacy-badge svg {
+            width: 18px;
+            height: 18px;
+        }
+
+        /* Hero Section */
+        .hero {
+            background: linear-gradient(180deg, var(--bg) 0%, var(--secondary) 100%);
+            padding: 160px 0 100px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle at 30% 70%, rgba(140, 154, 132, 0.1) 0%, transparent 50%),
+                        radial-gradient(circle at 70% 30%, rgba(194, 123, 102, 0.08) 0%, transparent 40%);
+            animation: heroFloat 20s ease-in-out infinite;
+        }
+
+        @keyframes heroFloat {
+            0%, 100% { transform: translate(0, 0) rotate(0deg); }
+            50% { transform: translate(-2%, 2%) rotate(1deg); }
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 1;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .hero h1 {
+            font-size: clamp(2.5rem, 6vw, 4.5rem);
+            color: var(--text);
+            margin-bottom: 24px;
+            letter-spacing: -0.02em;
+        }
+
+        .hero h1 span {
+            color: var(--primary);
+            font-style: italic;
+        }
+
+        .hero p {
+            font-size: 1.25rem;
+            color: var(--text-secondary);
+            max-width: 600px;
+            margin: 0 auto 40px;
+            line-height: 1.8;
+        }
+
+        .hero-cta {
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            background: var(--foreground);
+            color: var(--bg);
+            padding: 18px 36px;
+            border-radius: var(--radius-full);
+            font-size: 1rem;
+            font-weight: 500;
+            text-decoration: none;
+            transition: all var(--transition-normal);
+            border: none;
+            cursor: pointer;
+        }
+
+        .hero-cta:hover {
+            background: var(--accent);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .hero-cta svg {
+            width: 20px;
+            height: 20px;
+            transition: transform var(--transition-fast);
+        }
+
+        .hero-cta:hover svg {
+            transform: translateX(4px);
+        }
+
+        .btn-outline {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: transparent;
+            border: 1px solid var(--primary);
+            color: var(--primary);
+            padding: 16px 28px;
+            border-radius: var(--radius-full);
+            font-size: 0.95rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all var(--transition-normal);
+            margin-left: 12px;
+        }
+
+        .btn-outline:hover {
+            background: var(--primary);
+            color: white;
+        }
+
+        .trust-indicators {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            margin-top: 64px;
+            flex-wrap: wrap;
+        }
+
+        .trust-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+        }
+
+        .trust-item svg {
+            width: 22px;
+            height: 22px;
+            color: var(--primary);
+        }
+
+        /* Dashboard */
+        .dashboard {
+            padding: 100px 0;
+            display: none;
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        .dashboard.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .dashboard-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 40px;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .dashboard-title h2 {
+            font-size: 2rem;
+            margin-bottom: 8px;
+        }
+
+        .dashboard-title p {
+            color: var(--text-secondary);
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 14px 24px;
+            border-radius: var(--radius-full);
+            font-weight: 500;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: all var(--transition-normal);
+            border: none;
+        }
+
+        .btn-primary {
+            background: var(--foreground);
+            color: var(--bg);
+        }
+
+        .btn-primary:hover {
+            background: var(--accent);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--text);
+        }
+
+        .btn-outline:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+
+        .btn-danger {
+            background: transparent;
+            color: var(--alert);
+            border: 1px solid var(--alert);
+        }
+
+        .btn-danger:hover {
+            background: var(--alert);
+            color: white;
+        }
+
+        /* Grid Layout */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 32px;
+        }
+
+        @media (max-width: 1024px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Cards */
+        .card {
+            background: var(--card-bg);
+            border-radius: var(--radius-md);
+            padding: 32px;
+            box-shadow: var(--shadow-sm);
+            transition: all var(--transition-normal);
+            border: 1px solid var(--border);
+        }
+
+        .card:hover {
+            box-shadow: var(--shadow-md);
+            transform: translateY(-4px);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
+        .card-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-family: 'Source Sans 3', sans-serif;
+        }
+
+        .card-title svg {
+            width: 24px;
+            height: 24px;
+            color: var(--primary);
+        }
+
+        /* Form Elements */
+        .form-group {
+            margin-bottom: 24px;
+        }
+
+        .form-group:last-child {
+            margin-bottom: 0;
+        }
+
+        .form-label {
+            display: block;
+            font-weight: 500;
+            margin-bottom: 10px;
+            font-size: 0.95rem;
+            color: var(--text);
+        }
+
+        .slider-container {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .slider {
+            flex: 1;
+            -webkit-appearance: none;
+            height: 8px;
+            border-radius: 4px;
+            background: var(--border);
+            outline: none;
+        }
+
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: var(--primary);
+            cursor: pointer;
+            transition: all var(--transition-fast);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .slider::-webkit-slider-thumb:hover {
+            transform: scale(1.15);
+            background: var(--primary-hover);
+        }
+
+        .slider-value {
+            font-family: 'Source Sans 3', sans-serif;
+            font-weight: 600;
+            font-size: 1.1rem;
+            min-width: 40px;
+            text-align: center;
+            color: var(--primary);
+        }
+
+        input[type="number"], input[type="text"], input[type="email"], input[type="password"] {
+            width: 100%;
+            padding: 16px 20px;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-full);
+            font-size: 1rem;
+            font-family: inherit;
+            transition: all var(--transition-fast);
+            background: var(--bg);
+            color: var(--text);
+        }
+
+        input[type="number"]:focus, input[type="text"]:focus, input[type="email"]:focus, input[type="password"]:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(140, 154, 132, 0.2);
+        }
+
+        .input-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        @media (max-width: 500px) {
+            .input-row {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Vitals Section */
+        .vitals-toggle {
+            width: 100%;
+            background: var(--secondary);
+            border: none;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 18px 24px;
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            font-family: inherit;
+            font-weight: 500;
+            color: var(--text);
+            margin-top: 8px;
+            transition: all var(--transition-fast);
+        }
+
+        .vitals-toggle:hover {
+            background: var(--border);
+        }
+
+        .vitals-toggle svg {
+            transition: transform var(--transition-fast);
+        }
+
+        .vitals-toggle.open svg {
+            transform: rotate(180deg);
+        }
+
+        .vitals-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height var(--transition-normal), opacity var(--transition-normal);
+            opacity: 0;
+        }
+
+        .vitals-content.open {
+            max-height: 400px;
+            opacity: 1;
+            padding-top: 20px;
+        }
+
+        /* Insights */
+        .insight-card {
+            background: linear-gradient(135deg, #FDF8F3 0%, #F5EBE0 100%);
+            border-left: 4px solid var(--accent);
+            padding: 24px;
+            border-radius: var(--radius-md);
+            margin-bottom: 20px;
+            transition: all var(--transition-normal);
+        }
+
+        [data-theme="dark"] .insight-card {
+            background: linear-gradient(135deg, #3A2E28 0%, #2D2620 100%);
+        }
+
+        .insight-card:hover {
+            transform: translateX(4px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .insight-card.alert {
+            border-left-color: var(--alert);
+            background: linear-gradient(135deg, #FDF5F3 0%, #F5E8E5 100%);
+        }
+
+        [data-theme="dark"] .insight-card.alert {
+            background: linear-gradient(135deg, #3A2825 0%, #2D1F1C 100%);
+        }
+
+        .insight-card.info {
+            border-left-color: var(--primary);
+            background: linear-gradient(135deg, #F5F9F3 0%, #E8F0E5 100%);
+        }
+
+        [data-theme="dark"] .insight-card.info {
+            background: linear-gradient(135deg, #2D352C 0%, #252D25 100%);
+        }
+
+        .insight-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 14px;
+        }
+
+        .insight-title {
+            font-weight: 600;
+            font-size: 1.05rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-family: 'Source Sans 3', sans-serif;
+        }
+
+        .insight-title svg {
+            width: 22px;
+            height: 22px;
+        }
+
+        .confidence-badge {
+            font-size: 0.75rem;
+            padding: 6px 14px;
+            border-radius: var(--radius-full);
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .confidence-high {
+            background: rgba(140, 154, 132, 0.25);
+            color: #5A6B54;
+        }
+
+        [data-theme="dark"] .confidence-high {
+            color: #A8BD9C;
+        }
+
+        .confidence-medium {
+            background: rgba(212, 163, 115, 0.25);
+            color: #9A7050;
+        }
+
+        [data-theme="dark"] .confidence-medium {
+            color: #D4A373;
+        }
+
+        .confidence-low {
+            background: rgba(107, 124, 110, 0.2);
+            color: #6B7C6E;
+        }
+
+        [data-theme="dark"] .confidence-low {
+            color: #A3B5A2;
+        }
+
+        .insight-description {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            margin-bottom: 18px;
+            line-height: 1.7;
+        }
+
+        .insight-action {
+            background: var(--card-bg);
+            padding: 18px;
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--border);
+        }
+
+        .insight-action-title {
+            font-weight: 600;
+            font-size: 0.85rem;
+            color: var(--primary);
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .insight-action-title svg {
+            width: 16px;
+            height: 16px;
+        }
+
+        .insight-action p {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        /* Charts */
+        .chart-container {
+            height: 220px;
+            position: relative;
+        }
+
+        .sparkline {
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-between;
+            height: 100%;
+            gap: 6px;
+        }
+
+        .spark-bar {
+            flex: 1;
+            background: var(--primary);
+            border-radius: 6px 6px 0 0;
+            min-height: 6px;
+            transition: all var(--transition-normal);
+            position: relative;
+            cursor: pointer;
+        }
+
+        .spark-bar:nth-child(3n+1) { background: var(--primary); }
+        .spark-bar:nth-child(3n+2) { background: var(--accent); }
+        .spark-bar:nth-child(3n) { background: #9B8B7D; }
+
+        .spark-bar:hover {
+            filter: brightness(1.1);
+            transform: scaleY(1.02);
+        }
+
+        .spark-bar:hover::after {
+            content: attr(data-value);
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--foreground);
+            color: var(--bg);
+            padding: 6px 10px;
+            border-radius: 8px;
+            font-size: 0.75rem;
+            white-space: nowrap;
+            margin-bottom: 8px;
+            box-shadow: var(--shadow-md);
+        }
+
+        .chart-legend {
+            display: flex;
+            gap: 20px;
+            margin-top: 16px;
+            flex-wrap: wrap;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
+        .legend-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+
+        /* Stats */
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 24px;
+            margin-bottom: 32px;
+        }
+
+        @media (max-width: 768px) {
+            .stats-row {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        .stat-card {
+            background: var(--card-bg);
+            padding: 28px;
+            border-radius: var(--radius-md);
+            box-shadow: var(--shadow-sm);
+            text-align: center;
+            border: 1px solid var(--border);
+            transition: all var(--transition-normal);
+        }
+
+        .stat-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .stat-value {
+            font-family: 'Playfair Display', serif;
+            font-size: 2rem;
+            font-weight: 600;
+            color: var(--primary);
+            margin-bottom: 4px;
+        }
+
+        .stat-label {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 60px 24px;
+        }
+
+        .empty-state svg {
+            width: 80px;
+            height: 80px;
+            color: var(--border);
+            margin-bottom: 24px;
+        }
+
+        .empty-state h3 {
+            font-size: 1.3rem;
+            margin-bottom: 10px;
+        }
+
+        .empty-state p {
+            color: var(--text-secondary);
+            max-width: 320px;
+            margin: 0 auto;
+        }
+
+        /* Toast */
+        .toast-container {
+            position: fixed;
+            top: 100px;
+            right: 24px;
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .toast {
+            background: var(--card-bg);
+            padding: 18px 24px;
+            border-radius: var(--radius-md);
+            box-shadow: var(--shadow-lg);
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            animation: slideIn 0.4s ease-out;
+            max-width: 400px;
+            border: 1px solid var(--border);
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(100px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .toast.success {
+            border-left: 4px solid var(--success);
+        }
+
+        .toast.warning {
+            border-left: 4px solid var(--warning);
+        }
+
+        .toast svg {
+            width: 24px;
+            height: 24px;
+            flex-shrink: 0;
+        }
+
+        .toast.success svg {
+            color: var(--success);
+        }
+
+        .toast.warning svg {
+            color: var(--warning);
+        }
+
+        /* Calendar */
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 6px;
+        }
+
+        .calendar-day {
+            aspect-ratio: 1;
+            border-radius: var(--radius-sm);
+            background: var(--bg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all var(--transition-fast);
+            color: var(--text);
+        }
+
+        .calendar-day:hover {
+            background: var(--border);
+            transform: scale(1.05);
+        }
+
+        .calendar-day.has-data {
+            background: rgba(140, 154, 132, 0.25);
+            color: var(--primary);
+            font-weight: 500;
+        }
+
+        .calendar-day.today {
+            border: 2px solid var(--primary);
+        }
+
+        .calendar-day.low-energy {
+            background: rgba(212, 163, 115, 0.3);
+        }
+
+        .calendar-day.good-sleep {
+            background: rgba(140, 154, 132, 0.35);
+        }
+
+        /* Modal */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(4px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all var(--transition-normal);
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal {
+            background: var(--card-bg);
+            padding: 40px;
+            border-radius: var(--radius-md);
+            max-width: 480px;
+            width: 90%;
+            transform: scale(0.9);
+            transition: transform var(--transition-normal);
+            border: 1px solid var(--border);
+        }
+
+        .modal-overlay.active .modal {
+            transform: scale(1);
+        }
+
+        .modal h3 {
+            font-size: 1.5rem;
+            margin-bottom: 14px;
+        }
+
+        .modal p {
+            color: var(--text-secondary);
+            margin-bottom: 28px;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 14px;
+            justify-content: flex-end;
+        }
+
+        /* Footer */
+        footer {
+            background: var(--foreground);
+            color: rgba(232, 228, 222, 0.7);
+            padding: 60px 0;
+            margin-top: 80px;
+        }
+
+        .footer-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 24px;
+        }
+
+        .footer-links {
+            display: flex;
+            gap: 32px;
+        }
+
+        .footer-links a {
+            color: rgba(232, 228, 222, 0.7);
+            text-decoration: none;
+            font-size: 0.95rem;
+            transition: color var(--transition-fast);
+        }
+
+        .footer-links a:hover {
+            color: white;
+        }
+
+        .footer-disclaimer {
+            font-size: 0.8rem;
+            opacity: 0.7;
+            max-width: 520px;
+            text-align: center;
+        }
+
+        /* Landing */
+        .landing {
+            display: block;
+        }
+
+        .landing.hidden {
+            display: none;
+        }
+
+        /* Utility */
+        .hidden {
+            display: none !important;
+        }
+
+        .text-center {
+            text-align: center;
+        }
+
+        .mt-4 { margin-top: 16px; }
+        .mb-4 { margin-bottom: 16px; }
+        .mt-8 { margin-top: 32px; }
+        .mb-8 { margin-bottom: 32px; }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .hero {
+                padding: 120px 0 80px;
+            }
+            
+            .hero h1 {
+                font-size: 2.2rem;
+            }
+            
+            .trust-indicators {
+                gap: 20px;
+                margin-top: 40px;
+            }
+            
+            .card {
+                padding: 24px;
+            }
+            
+            .stats-row {
+                gap: 16px;
+            }
+            
+            .stat-card {
+                padding: 20px;
+            }
+            
+            .stat-value {
+                font-size: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Paper Grain Overlay -->
+    <div class="grain-overlay"></div>
+
+    <!-- Header -->
+    <header id="header">
+        <div class="container">
+            <div class="header-content">
+                <a href="#" class="logo">
+                    <div class="logo-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+                        </svg>
+                    </div>
+                    VitalWatch
+                </a>
+                <div class="header-actions">
+                    <button class="theme-toggle" onclick="toggleTheme()" title="Toggle theme">
+                        <svg class="sun-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <circle cx="12" cy="12" r="5"/>
+                            <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+                        </svg>
+                        <svg class="moon-icon" style="display:none" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>
+                        </svg>
+                    </button>
+                    <div class="privacy-badge">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                            <path d="M7 11V7a5 5 0 0110 0v4"/>
+                        </svg>
+                        Your data never leaves your device
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Landing Section -->
+    <section class="landing" id="landing">
+        <div class="hero">
+            <div class="container">
+                <div class="hero-content">
+                    <h1>Detect Health Decline<br><span>Before It Becomes Disease</span></h1>
+                    <p>Most serious conditions are reversible when caught early. VitalWatch tracks the patterns your doctor doesn't see — between appointments.</p>
+                    <div>
+                        <button class="hero-cta" onclick="startTracking()">
+                            Get Started
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M5 12h14M12 5l7 7-7 7"/>
+                            </svg>
+                        </button>
+                        <button class="btn-outline" onclick="showAuth('login')">
+                            Log In
+                        </button>
+                    </div>
+                    
+                    <div class="trust-indicators">
+                        <div class="trust-item">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                            </svg>
+                            100% Private — Data stays on your device
+                        </div>
+                        <div class="trust-item">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M22 11.08V12a10 10 0 11-5.93-9.14"/>
+                                <polyline points="22 4 12 14.01 9 11.01"/>
+                            </svg>
+                            Not a diagnosis — Pattern-based insights
+                        </div>
+                        <div class="trust-item">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="10"/>
+                                <path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/>
+                                <line x1="12" y1="17" x2="12.01" y2="17"/>
+                            </svg>
+                            Actionable — Know exactly what to ask your doctor
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Features Preview -->
+        <section class="container" style="padding: 80px 24px;">
+            <div class="dashboard-grid">
+                <div class="card">
+                    <div class="card-title">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+                        </svg>
+                        Pattern Detection
+                    </div>
+                    <p style="color: var(--text-secondary); margin-top: 16px; line-height: 1.8;">AI analyzes your daily metrics to detect patterns that correlate with early-stage conditions — before symptoms become serious.</p>
+                </div>
+                <div class="card">
+                    <div class="card-title">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
+                            <polyline points="14 2 14 8 20 8"/>
+                            <line x1="16" y1="13" x2="8" y2="13"/>
+                            <line x1="16" y1="17" x2="8" y2="17"/>
+                        </svg>
+                        Actionable Insights
+                    </div>
+                    <p style="color: var(--text-secondary); margin-top: 16px; line-height: 1.8;">Get specific recommendations: "Your fatigue + sleep pattern matches early thyroid dysfunction — here's what to ask your doctor."</p>
+                </div>
+            </div>
+        </section>
+    </section>
+
+    <!-- Dashboard Section -->
+    <section class="dashboard" id="dashboard">
+        <div class="container">
+            <div class="dashboard-header">
+                <div class="dashboard-title">
+                    <h2>Your Health Dashboard</h2>
+                    <p id="streak-text">Start logging daily to see patterns emerge</p>
+                </div>
+                <div style="display: flex; gap: 14px;">
+                    <button class="btn btn-outline" onclick="showDataModal()">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+                            <polyline points="17 8 12 3 7 8"/>
+                            <line x1="12" y1="3" x2="12" y2="15"/>
+                        </svg>
+                        Export
+                    </button>
+                    <button class="btn btn-danger" onclick="showDeleteModal()">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="3 6 5 6 21 6"/>
+                            <path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/>
+                        </svg>
+                        Delete
+                    </button>
+                </div>
+            </div>
+
+            <!-- Stats Row -->
+            <div class="stats-row">
+                <div class="stat-card">
+                    <div class="stat-value" id="stat-days">0</div>
+                    <div class="stat-label">Days Tracked</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="stat-avg-sleep">--</div>
+                    <div class="stat-label">Avg Sleep (hrs)</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="stat-avg-energy">--</div>
+                    <div class="stat-label">Avg Energy</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="stat-insights">0</div>
+                    <div class="stat-label">Insights</div>
+                </div>
+            </div>
+
+            <div class="dashboard-grid">
+                <!-- Daily Log -->
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                <circle cx="12" cy="12" r="10"/>
+                                <polyline points="12 6 12 12 16 14"/>
+                            </svg>
+                            Today's Check-in
+                        </div>
+                        <span id="today-date" style="color: var(--text-secondary); font-size: 0.9rem;"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Sleep Quality</label>
+                        <div class="slider-container">
+                            <input type="range" class="slider" id="sleep-quality" min="1" max="10" value="5" oninput="updateSliderValue('sleep-quality-value', this.value)">
+                            <span class="slider-value" id="sleep-quality-value">5</span>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Sleep Duration (hours)</label>
+                        <div class="slider-container">
+                            <input type="range" class="slider" id="sleep-duration" min="3" max="12" step="0.5" value="7" oninput="updateSliderValue('sleep-duration-value', this.value)">
+                            <span class="slider-value" id="sleep-duration-value">7</span>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Energy Level</label>
+                        <div class="slider-container">
+                            <input type="range" class="slider" id="energy-level" min="1" max="10" value="5" oninput="updateSliderValue('energy-level-value', this.value)">
+                            <span class="slider-value" id="energy-level-value">5</span>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Mood</label>
+                        <div class="slider-container">
+                            <input type="range" class="slider" id="mood-level" min="1" max="10" value="5" oninput="updateSliderValue('mood-level-value', this.value)">
+                            <span class="slider-value" id="mood-level-value">5</span>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Water Intake (glasses)</label>
+                        <div class="slider-container">
+                            <input type="range" class="slider" id="water-intake" min="0" max="16" value="8" oninput="updateSliderValue('water-intake-value', this.value)">
+                            <span class="slider-value" id="water-intake-value">8</span>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Exercise (minutes)</label>
+                        <div class="slider-container">
+                            <input type="range" class="slider" id="exercise" min="0" max="180" step="5" value="30" oninput="updateSliderValue('exercise-value', this.value)">
+                            <span class="slider-value" id="exercise-value">30</span>
+                        </div>
+                    </div>
+
+                    <button class="vitals-toggle" onclick="toggleVitals()">
+                        <span>Vitals (Optional)</span>
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="6 9 12 15 18 9"/>
+                        </svg>
+                    </button>
+
+                    <div class="vitals-content" id="vitals-content">
+                        <div class="input-row">
+                            <div class="form-group">
+                                <label class="form-label">Systolic BP</label>
+                                <input type="number" id="bp-systolic" placeholder="120" min="70" max="250">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Diastolic BP</label>
+                                <input type="number" id="bp-diastolic" placeholder="80" min="40" max="150">
+                            </div>
+                        </div>
+                        <div class="input-row">
+                            <div class="form-group">
+                                <label class="form-label">Weight (kg)</label>
+                                <input type="number" id="weight" placeholder="70" min="20" max="300" step="0.1">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Resting HR</label>
+                                <input type="number" id="heart-rate" placeholder="70" min="40" max="200">
+                            </div>
+                        </div>
+                    </div>
+
+                    <button class="btn btn-primary" style="width: 100%; margin-top: 28px;" onclick="saveDailyLog()">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/>
+                            <polyline points="17 21 17 13 7 13 7 21"/>
+                            <polyline points="7 3 7 8 15 8"/>
+                        </svg>
+                        Save Today's Log
+                    </button>
+                </div>
+
+                <!-- Insights Panel -->
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                <path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/>
+                            </svg>
+                            AI Insights
+                        </div>
+                    </div>
+
+                    <div id="insights-container">
+                        <div class="empty-state">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                <circle cx="12" cy="12" r="10"/>
+                                <path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/>
+                                <line x1="12" y1="17" x2="12.01" y2="17"/>
+                            </svg>
+                            <h3>Keep tracking to unlock insights</h3>
+                            <p>Log at least 7 days of data to start seeing patterns emerge.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Trends Chart -->
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+                            </svg>
+                            7-Day Trends
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <div class="sparkline" id="trends-chart">
+                        </div>
+                    </div>
+                    <div class="chart-legend">
+                        <div class="legend-item">
+                            <div class="legend-dot" style="background: var(--primary);"></div>
+                            Energy
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-dot" style="background: var(--accent);"></div>
+                            Sleep Quality
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-dot" style="background: #9B8B7D;"></div>
+                            Mood
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Activity Calendar -->
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                                <line x1="16" y1="2" x2="16" y2="6"/>
+                                <line x1="8" y1="2" x2="8" y2="6"/>
+                                <line x1="3" y1="10" x2="21" y2="10"/>
+                            </svg>
+                            Activity Calendar
+                        </div>
+                    </div>
+                    <div class="calendar-grid" id="calendar">
+                    </div>
+                    <div class="chart-legend" style="margin-top: 20px;">
+                        <div class="legend-item">
+                            <div class="legend-dot" style="background: rgba(140, 154, 132, 0.3);"></div>
+                            Logged
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-dot" style="background: rgba(140, 154, 132, 0.5);"></div>
+                            Good Sleep
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-dot" style="background: rgba(212, 163, 115, 0.5);"></div>
+                            Low Energy
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-links">
+                    <a href="#">Privacy Policy</a>
+                    <a href="#">Disclaimer</a>
+                    <a href="#">About</a>
+                </div>
+                <p class="footer-disclaimer">
+                    VitalWatch is for informational purposes only and does not constitute medical advice, diagnosis, or treatment. Always consult a qualified healthcare provider.
+                </p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Toast Container -->
+    <div class="toast-container" id="toast-container"></div>
+
+    <!-- Delete Data Modal -->
+    <div class="modal-overlay" id="delete-modal">
+        <div class="modal">
+            <h3>Delete All Data?</h3>
+            <p>This will permanently delete all your health tracking data. This action cannot be undone.</p>
+            <div class="modal-actions">
+                <button class="btn btn-outline" onclick="closeDeleteModal()">Cancel</button>
+                <button class="btn btn-danger" onclick="deleteAllData()">Delete Everything</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Export Data Modal -->
+    <div class="modal-overlay" id="export-modal">
+        <div class="modal">
+            <h3>Export Your Data</h3>
+            <p>Your data is stored securely. Click below to download a JSON copy.</p>
+            <div class="modal-actions">
+                <button class="btn btn-outline" onclick="closeExportModal()">Close</button>
+                <button class="btn btn-primary" onclick="exportData()">Download JSON</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Auth Modals -->
+    <div class="modal-overlay" id="login-modal">
+        <div class="modal">
+            <h3>Welcome Back</h3>
+            <div class="form-group">
+                <label class="form-label">Email</label>
+                <input type="email" id="login-email" placeholder="your@email.com">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Password</label>
+                <input type="password" id="login-password" placeholder="Your password">
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-outline" onclick="closeAuthModals()">Cancel</button>
+                <button class="btn btn-primary" onclick="login()">Log In</button>
+            </div>
+            <p style="margin-top: 20px; text-align: center; font-size: 0.9rem; color: var(--text-secondary);">
+                Don't have an account? <a href="#" onclick="showAuth('register'); return false;" style="color: var(--primary);">Sign up</a>
+            </p>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="register-modal">
+        <div class="modal">
+            <h3>Create Account</h3>
+            <p style="color: var(--text-secondary);">Your health data stays private and secure.</p>
+            <div class="form-group">
+                <label class="form-label">Email</label>
+                <input type="email" id="register-email" placeholder="your@email.com">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Password</label>
+                <input type="password" id="register-password" placeholder="At least 6 characters">
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-outline" onclick="closeAuthModals()">Cancel</button>
+                <button class="btn btn-primary" onclick="register()">Create Account</button>
+            </div>
+            <p style="margin-top: 20px; text-align: center; font-size: 0.9rem; color: var(--text-secondary);">
+                Already have an account? <a href="#" onclick="showAuth('login'); return false;" style="color: var(--primary);">Log in</a>
+            </p>
+        </div>
+    </div>
+
+    <script>
+        // Theme Management
+        function toggleTheme() {
+            const html = document.documentElement;
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('vitalwatch_theme', newTheme);
+            updateThemeIcon(newTheme);
+        }
+
+        function updateThemeIcon(theme) {
+            const sunIcon = document.querySelector('.sun-icon');
+            const moonIcon = document.querySelector('.moon-icon');
+            if (theme === 'dark') {
+                sunIcon.style.display = 'block';
+                moonIcon.style.display = 'none';
+            } else {
+                sunIcon.style.display = 'none';
+                moonIcon.style.display = 'block';
+            }
+        }
+
+        // Initialize theme
+        function initTheme() {
+            const savedTheme = localStorage.getItem('vitalwatch_theme');
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            const theme = savedTheme || (prefersDark ? 'dark' : 'light');
+            document.documentElement.setAttribute('data-theme', theme);
+            updateThemeIcon(theme);
+        }
+
+        // State
+        let healthData = [];
+        let insights = [];
+        let authToken = localStorage.getItem('vitalwatch_token');
+        let currentUser = null;
+
+        const API_BASE = 'http://localhost:3000/api';
+
+        // API Service
+        const api = {
+            async request(endpoint, options = {}) {
+                const url = `${API_BASE}${endpoint}`;
+                const config = {
+                    headers: {
+                        'Content-Type': 'application/json',
+                        ...(authToken ? { Authorization: `Bearer ${authToken}` } : {})
+                    },
+                    ...options
+                };
+                if (config.body && typeof config.body === 'object') {
+                    config.body = JSON.stringify(config.body);
+                }
+                const response = await fetch(url, config);
+                const data = await response.json();
+                if (!response.ok) {
+                    throw new Error(data.error || 'Request failed');
+                }
+                return data;
+            },
+            post: (endpoint, body) => api.request(endpoint, { method: 'POST', body }),
+            get: (endpoint) => api.request(endpoint),
+            put: (endpoint, body) => api.request(endpoint, { method: 'PUT', body }),
+            delete: (endpoint) => api.request(endpoint, { method: 'DELETE' })
+        };
+
+        // Auth Functions
+        async function register() {
+            const email = document.getElementById('register-email').value;
+            const password = document.getElementById('register-password').value;
+            try {
+                const data = await api.post('/auth/register', { email, password });
+                authToken = data.token;
+                currentUser = data.user;
+                localStorage.setItem('vitalwatch_token', authToken);
+                closeAuthModals();
+                startTracking();
+                loadFromAPI();
+                showToast('Account created! Welcome to VitalWatch.', 'success');
+            } catch (error) {
+                showToast(error.message, 'warning');
+            }
+        }
+
+        async function login() {
+            const email = document.getElementById('login-email').value;
+            const password = document.getElementById('login-password').value;
+            try {
+                const data = await api.post('/auth/login', { email, password });
+                authToken = data.token;
+                currentUser = data.user;
+                localStorage.setItem('vitalwatch_token', authToken);
+                closeAuthModals();
+                startTracking();
+                loadFromAPI();
+                showToast('Welcome back!', 'success');
+            } catch (error) {
+                showToast(error.message, 'warning');
+            }
+        }
+
+        function logout() {
+            authToken = null;
+            currentUser = null;
+            localStorage.removeItem('vitalwatch_token');
+            document.getElementById('dashboard').classList.remove('active');
+            document.getElementById('landing').classList.remove('hidden');
+            showToast('Logged out successfully', 'success');
+        }
+
+        function showAuth(type) {
+            closeAuthModals();
+            document.getElementById(`${type}-modal`).classList.add('active');
+        }
+
+        function closeAuthModals() {
+            document.getElementById('login-modal').classList.remove('active');
+            document.getElementById('register-modal').classList.remove('active');
+        }
+
+        async function loadFromAPI() {
+            if (!authToken) return;
+            try {
+                const [entriesRes, insightsRes] = await Promise.all([
+                    api.get('/health/entries?days=30'),
+                    api.get('/insights')
+                ]);
+                healthData = entriesRes.entries.map(e => ({
+                    date: e.date,
+                    sleepQuality: e.sleep_quality,
+                    sleepDuration: e.sleep_duration,
+                    energy: e.energy,
+                    mood: e.mood,
+                    water: e.water,
+                    exercise: e.exercise,
+                    bpSystolic: e.bp_systolic,
+                    bpDiastolic: e.bp_diastolic,
+                    weight: e.weight,
+                    heartRate: e.heart_rate
+                }));
+                insights = insightsRes.insights.map(i => ({
+                    type: i.type,
+                    title: i.title,
+                    description: i.description,
+                    action: i.action,
+                    confidence: i.confidence
+                }));
+                localStorage.setItem('vitalwatch_data', JSON.stringify(healthData));
+                localStorage.setItem('vitalwatch_insights', JSON.stringify(insights));
+                updateUI();
+                renderCalendar();
+                renderTrends();
+            } catch (error) {
+                console.error('Failed to load from API:', error);
+            }
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            initTheme();
+            loadData();
+            updateUI();
+            renderCalendar();
+            renderTrends();
+            
+            const today = new Date();
+            document.getElementById('today-date').textContent = today.toLocaleDateString('en-US', { 
+                weekday: 'long', 
+                month: 'short', 
+                day: 'numeric' 
+            });
+
+            const todayStr = getDateString(today);
+            const todayEntry = healthData.find(d => d.date === todayStr);
+            if (todayEntry) {
+                loadTodayValues(todayEntry);
+            }
+
+            if (authToken) {
+                loadFromAPI().then(() => {
+                    if (healthData.length > 0) {
+                        startTracking();
+                    }
+                });
+            }
+        });
+
+        // Utility Functions
+        function getDateString(date) {
+            return date.toISOString().split('T')[0];
+        }
+
+        function loadData() {
+            const stored = localStorage.getItem('vitalwatch_data');
+            if (stored) {
+                healthData = JSON.parse(stored);
+            }
+            const storedInsights = localStorage.getItem('vitalwatch_insights');
+            if (storedInsights) {
+                insights = JSON.parse(storedInsights);
+            }
+        }
+
+        function saveData() {
+            localStorage.setItem('vitalwatch_data', JSON.stringify(healthData));
+            localStorage.setItem('vitalwatch_insights', JSON.stringify(insights));
+        }
+
+        // UI Functions
+        function updateSliderValue(elementId, value) {
+            document.getElementById(elementId).textContent = value;
+        }
+
+        function toggleVitals() {
+            const toggle = document.querySelector('.vitals-toggle');
+            const content = document.getElementById('vitals-content');
+            toggle.classList.toggle('open');
+            content.classList.toggle('open');
+        }
+
+        function startTracking() {
+            document.getElementById('landing').classList.add('hidden');
+            document.getElementById('dashboard').classList.add('active');
+            showToast('Welcome to VitalWatch! Start logging daily.', 'success');
+        }
+
+        function loadTodayValues(entry) {
+            document.getElementById('sleep-quality').value = entry.sleepQuality;
+            document.getElementById('sleep-quality-value').textContent = entry.sleepQuality;
+            document.getElementById('sleep-duration').value = entry.sleepDuration;
+            document.getElementById('sleep-duration-value').textContent = entry.sleepDuration;
+            document.getElementById('energy-level').value = entry.energy;
+            document.getElementById('energy-level-value').textContent = entry.energy;
+            document.getElementById('mood-level').value = entry.mood;
+            document.getElementById('mood-level-value').textContent = entry.mood;
+            document.getElementById('water-intake').value = entry.water;
+            document.getElementById('water-intake-value').textContent = entry.water;
+            document.getElementById('exercise').value = entry.exercise;
+            document.getElementById('exercise-value').textContent = entry.exercise;
+            
+            if (entry.bpSystolic) document.getElementById('bp-systolic').value = entry.bpSystolic;
+            if (entry.bpDiastolic) document.getElementById('bp-diastolic').value = entry.bpDiastolic;
+            if (entry.weight) document.getElementById('weight').value = entry.weight;
+            if (entry.heartRate) document.getElementById('heart-rate').value = entry.heartRate;
+        }
+
+        async function saveDailyLog() {
+            const today = new Date();
+            const dateStr = getDateString(today);
+            
+            const entry = {
+                date: dateStr,
+                sleepQuality: parseInt(document.getElementById('sleep-quality').value),
+                sleepDuration: parseFloat(document.getElementById('sleep-duration').value),
+                energy: parseInt(document.getElementById('energy-level').value),
+                mood: parseInt(document.getElementById('mood-level').value),
+                water: parseInt(document.getElementById('water-intake').value),
+                exercise: parseInt(document.getElementById('exercise').value),
+                bpSystolic: parseInt(document.getElementById('bp-systolic').value) || null,
+                bpDiastolic: parseInt(document.getElementById('bp-diastolic').value) || null,
+                weight: parseFloat(document.getElementById('weight').value) || null,
+                heartRate: parseInt(document.getElementById('heart-rate').value) || null
+            };
+
+            if (authToken) {
+                try {
+                    await api.post('/health/entries', entry);
+                    await loadFromAPI();
+                } catch (error) {
+                    showToast('Failed to save to server', 'warning');
+                }
+            }
+
+            const existingIndex = healthData.findIndex(d => d.date === dateStr);
+            if (existingIndex >= 0) {
+                healthData[existingIndex] = entry;
+            } else {
+                healthData.push(entry);
+            }
+
+            healthData.sort((a, b) => new Date(a.date) - new Date(b.date));
+
+            saveData();
+            updateUI();
+            renderCalendar();
+            renderTrends();
+            
+            showToast('Daily log saved! Keep tracking to detect patterns.', 'success');
+        }
+
+        function updateUI() {
+            document.getElementById('stat-days').textContent = healthData.length;
+            
+            if (healthData.length > 0) {
+                const avgSleep = (healthData.reduce((sum, d) => sum + d.sleepDuration, 0) / healthData.length).toFixed(1);
+                const avgEnergy = (healthData.reduce((sum, d) => sum + d.energy, 0) / healthData.length).toFixed(1);
+                document.getElementById('stat-avg-sleep').textContent = avgSleep;
+                document.getElementById('stat-avg-energy').textContent = avgEnergy;
+            }
+
+            if (healthData.length >= 7 && !authToken) {
+                generateInsights();
+            }
+
+            document.getElementById('stat-insights').textContent = insights.length;
+            renderInsights();
+
+            if (healthData.length > 0) {
+                document.getElementById('streak-text').textContent = `${healthData.length} days tracked — keep it up!`;
+            }
+        }
+
+        // Pattern Detection Engine
+        function generateInsights() {
+            if (authToken) return;
+
+            insights = [];
+            const recentData = healthData.slice(-30);
+            
+            if (recentData.length < 7) return;
+
+            const lowSleepDays = recentData.filter(d => d.sleepDuration < 6);
+            if (lowSleepDays.length >= 5) {
+                const lowEnergyDays = lowSleepDays.filter(d => d.energy < 5);
+                if (lowEnergyDays.length >= 3) {
+                    insights.push({
+                        type: 'alert',
+                        title: 'Sleep Deprivation Pattern Detected',
+                        description: `You've had ${lowSleepDays.length} nights with less than 6 hours of sleep in the past week. Combined with low energy levels, this could be affecting your metabolic health and cognitive function.`,
+                        action: 'Prioritize sleep hygiene. Consider a consistent bedtime and aim for 7-9 hours. If this persists, discuss with your doctor.',
+                        confidence: lowEnergyDays.length >= 4 ? 'high' : 'medium'
+                    });
+                }
+            }
+
+            if (recentData.length >= 14) {
+                const lastWeek = recentData.slice(-7);
+                const prevWeek = recentData.slice(-14, -7);
+                
+                const avgEnergyLast = lastWeek.reduce((s, d) => s + d.energy, 0) / 7;
+                const avgEnergyPrev = prevWeek.reduce((s, d) => s + d.energy, 0) / 7;
+                const avgSleepLast = lastWeek.reduce((s, d) => s + d.sleepDuration, 0) / 7;
+                const avgSleepPrev = prevWeek.reduce((s, d) => s + d.sleepDuration, 0) / 7;
+                
+                if (avgEnergyLast < avgEnergyPrev - 1 && avgSleepLast < avgSleepPrev) {
+                    insights.push({
+                        type: 'warning',
+                        title: 'Energy & Sleep Decline Pattern',
+                        description: 'Your energy levels have been trending downward over the past two weeks, accompanied by reduced sleep. This combination can indicate metabolic or hormonal changes.',
+                        action: 'Consider blood work to check thyroid function (TSH, T4). Ask your doctor: "Could my energy decline indicate a metabolic or thyroid issue?"',
+                        confidence: 'medium'
+                    });
+                }
+            }
+
+            const lowWaterDays = recentData.filter(d => d.water < 4);
+            if (lowWaterDays.length >= 7) {
+                const lowEnergyLowWater = lowWaterDays.filter(d => d.energy < 5);
+                if (lowEnergyLowWater.length >= 4) {
+                    insights.push({
+                        type: 'info',
+                        title: 'Hydration-Energy Correlation',
+                        description: `On days when you drank less than 4 glasses of water, ${lowEnergyLowWater.length} of them also had low energy levels. Chronic dehydration can significantly impact energy and mood.`,
+                        action: 'Aim for 8-10 glasses daily. Set reminders. Consider: "I\'ve noticed my energy drops on low-water days."',
+                        confidence: 'high'
+                    });
+                }
+            }
+
+            if (healthData.length >= 7) {
+                const weights = recentData.filter(d => d.weight).map(d => d.weight);
+                if (weights.length >= 7) {
+                    const firstWeight = weights[0];
+                    const recentWeight = weights[weights.length - 1];
+                    const weightChange = recentWeight - firstWeight;
+                    
+                    if (Math.abs(weightChange) > 2) {
+                        insights.push({
+                            type: 'info',
+                            title: weightChange > 0 ? 'Weight Increase Noted' : 'Weight Decrease Noted',
+                            description: `Your weight has changed by ${Math.abs(weightChange).toFixed(1)} kg over ${weights.length} days. ${weightChange > 0 ? 'Unexplained weight gain' : 'Unexplained weight loss'} can indicate various health factors.`,
+                            action: 'If this change is unintentional, discuss with your doctor. Consider metabolic panel and thyroid function tests.',
+                            confidence: 'medium'
+                        });
+                    }
+                }
+            }
+
+            saveData();
+        }
+
+        function renderInsights() {
+            const container = document.getElementById('insights-container');
+            
+            if (insights.length === 0) {
+                if (healthData.length >= 7) {
+                    container.innerHTML = `
+                        <div class="empty-state">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                <path d="M22 11.08V12a10 10 0 11-5.93-9.14"/>
+                                <polyline points="22 4 12 14.01 9 11.01"/>
+                            </svg>
+                            <h3>No patterns detected yet</h3>
+                            <p>Your data looks normal. Keep tracking to establish a baseline and monitor for changes.</p>
+                        </div>
+                    `;
+                }
+                return;
+            }
+
+            container.innerHTML = insights.map(insight => `
+                <div class="insight-card ${insight.type}">
+                    <div class="insight-header">
+                        <div class="insight-title">
+                            ${insight.type === 'alert' ? `
+                                <svg viewBox="0 0 24 24" fill="none" stroke="#C27B66" stroke-width="1.5">
+                                    <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+                                    <line x1="12" y1="9" x2="12" y2="13"/>
+                                    <line x1="12" y1="17" x2="12.01" y2="17"/>
+                                </svg>
+                            ` : insight.type === 'warning' ? `
+                                <svg viewBox="0 0 24 24" fill="none" stroke="#D4A373" stroke-width="1.5">
+                                    <circle cx="12" cy="12" r="10"/>
+                                    <line x1="12" y1="8" x2="12" y2="12"/>
+                                    <line x1="12" y1="16" x2="12.01" y2="16"/>
+                                </svg>
+                            ` : `
+                                <svg viewBox="0 0 24 24" fill="none" stroke="#8C9A84" stroke-width="1.5">
+                                    <circle cx="12" cy="12" r="10"/>
+                                    <line x1="12" y1="16" x2="12" y2="12"/>
+                                    <line x1="12" y1="8" x2="12.01" y2="8"/>
+                                </svg>
+                            `}
+                            ${insight.title}
+                        </div>
+                        <span class="confidence-badge confidence-${insight.confidence}">${insight.confidence} confidence</span>
+                    </div>
+                    <p class="insight-description">${insight.description}</p>
+                    <div class="insight-action">
+                        <div class="insight-action-title">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                <polyline points="9 11 12 14 22 4"/>
+                                <path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/>
+                            </svg>
+                            Recommended Action
+                        </div>
+                        <p>${insight.action}</p>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function renderTrends() {
+            const container = document.getElementById('trends-chart');
+            const recentData = healthData.slice(-7);
+            
+            if (recentData.length === 0) {
+                container.innerHTML = '<div class="empty-state"><p>No data yet</p></div>';
+                return;
+            }
+
+            container.innerHTML = recentData.map((d) => {
+                const energyHeight = (d.energy / 10) * 100;
+                const sleepHeight = (d.sleepQuality / 10) * 100;
+                const moodHeight = (d.mood / 10) * 100;
+                
+                return `
+                    <div style="flex: 1; display: flex; flex-direction: column; align-items: center; height: 100%;">
+                        <div style="flex: 1; width: 100%; display: flex; gap: 3px; align-items: flex-end;">
+                            <div class="spark-bar" style="height: ${energyHeight}%;" data-value="Energy: ${d.energy}"></div>
+                            <div class="spark-bar" style="height: ${sleepHeight}%;" data-value="Sleep: ${d.sleepQuality}"></div>
+                            <div class="spark-bar" style="height: ${moodHeight}%;" data-value="Mood: ${d.mood}"></div>
+                        </div>
+                        <div style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 12px;">
+                            ${new Date(d.date).toLocaleDateString('en-US', { weekday: 'short' }).charAt(0)}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function renderCalendar() {
+            const container = document.getElementById('calendar');
+            const today = new Date();
+            const currentMonth = today.getMonth();
+            const currentYear = today.getFullYear();
+            
+            const firstDay = new Date(currentYear, currentMonth, 1);
+            const lastDay = new Date(currentYear, currentMonth + 1, 0);
+            const startPadding = firstDay.getDay();
+            
+            let html = '';
+            
+            const days = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
+            days.forEach(d => {
+                html += `<div style="text-align: center; font-size: 0.8rem; color: var(--text-secondary); padding: 6px;">${d}</div>`;
+            });
+
+            for (let i = 0; i < startPadding; i++) {
+                html += '<div></div>';
+            }
+
+            for (let day = 1; day <= lastDay.getDate(); day++) {
+                const dateStr = getDateString(new Date(currentYear, currentMonth, day));
+                const entry = healthData.find(d => d.date === dateStr);
+                const isToday = day === today.getDate();
+                
+                let classes = 'calendar-day';
+                if (isToday) classes += ' today';
+                if (entry) {
+                    classes += ' has-data';
+                    if (entry.sleepDuration >= 7 && entry.sleepQuality >= 7) classes += ' good-sleep';
+                    if (entry.energy <= 4) classes += ' low-energy';
+                }
+                
+                html += `<div class="${classes}">${day}</div>`;
+            }
+
+            container.innerHTML = html;
+        }
+
+        // Toast Notifications
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.innerHTML = `
+                ${type === 'success' ? `
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M22 11.08V12a10 10 0 11-5.93-9.14"/>
+                        <polyline points="22 4 12 14.01 9 11.01"/>
+                    </svg>
+                ` : `
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"/>
+                        <line x1="12" y1="8" x2="12" y2="12"/>
+                        <line x1="12" y1="16" x2="12.01" y2="16"/>
+                    </svg>
+                `}
+                <span>${message}</span>
+            `;
+            container.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateX(100px)';
+                setTimeout(() => toast.remove(), 400);
+            }, 4000);
+        }
+
+        // Modal Functions
+        function showDeleteModal() {
+            document.getElementById('delete-modal').classList.add('active');
+        }
+
+        function closeDeleteModal() {
+            document.getElementById('delete-modal').classList.remove('active');
+        }
+
+        function deleteAllData() {
+            if (authToken) {
+                api.delete('/health/data').then(() => {
+                    localStorage.removeItem('vitalwatch_data');
+                    localStorage.removeItem('vitalwatch_insights');
+                    healthData = [];
+                    insights = [];
+                    logout();
+                    closeDeleteModal();
+                    showToast('All data deleted', 'warning');
+                }).catch(() => {
+                    showToast('Failed to delete server data', 'warning');
+                });
+                return;
+            }
+            
+            localStorage.removeItem('vitalwatch_data');
+            localStorage.removeItem('vitalwatch_insights');
+            healthData = [];
+            insights = [];
+            updateUI();
+            renderCalendar();
+            renderTrends();
+            closeDeleteModal();
+            showToast('All data deleted', 'warning');
+        }
+
+        function showDataModal() {
+            document.getElementById('export-modal').classList.add('active');
+        }
+
+        function closeExportModal() {
+            document.getElementById('export-modal').classList.remove('active');
+        }
+
+        function exportData() {
+            if (authToken) {
+                api.get('/health/export').then(data => {
+                    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `vitalwatch-data-${getDateString(new Date())}.json`;
+                    a.click();
+                    URL.revokeObjectURL(url);
+                    closeExportModal();
+                    showToast('Data exported successfully', 'success');
+                }).catch(() => {
+                    showToast('Export failed', 'warning');
+                });
+                return;
+            }
+            
+            const data = {
+                healthData,
+                insights,
+                exportedAt: new Date().toISOString()
+            };
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `vitalwatch-data-${getDateString(new Date())}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+            closeExportModal();
+            showToast('Data exported successfully', 'success');
+        }
+    </script>
+</body>
+</html>
